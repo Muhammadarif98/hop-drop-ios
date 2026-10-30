@@ -8,7 +8,7 @@ phone = next(d for items in devices['devices'].values() for d in items if 'iPhon
 udid = phone['udid']
 subprocess.run(['xcrun','simctl','boot',udid], check=False)
 run('xcrun','simctl','bootstatus',udid,'-b')
-assert pathlib.Path('build/sim/Build/Products/Debug-iphonesimulator/Hop.app/hop/index.html').is_file(), 'Renderer not bundled'
+assert pathlib.Path('build/sim/Build/Products/Debug-iphonesimulator/Hop.app/Renderer/index.html').is_file(), 'Renderer not bundled'
 run('xcrun','simctl','install',udid,'build/sim/Build/Products/Debug-iphonesimulator/Hop.app')
 outgoing=[]
 class Receiver(http.server.BaseHTTPRequestHandler):

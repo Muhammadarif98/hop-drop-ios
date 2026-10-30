@@ -7,7 +7,7 @@ import HopCore
 final class LocalAssets: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
         let allowed = ["index.html","styles.css","android.css","app.js","fx.js","bridge.js","i18n.js","multi.js","multi.css","picker.js","picker.css","icon.png"]
-        guard let url = task.request.url, url.host == "local", allowed.contains(url.lastPathComponent), let root = Bundle.main.resourceURL?.appendingPathComponent("hop"), let bytes = try? Data(contentsOf: root.appendingPathComponent(url.lastPathComponent)) else { task.didFailWithError(HopError.invalid("Unknown asset")); return }
+        guard let url = task.request.url, url.host == "local", allowed.contains(url.lastPathComponent), let root = Bundle.main.resourceURL?.appendingPathComponent("Renderer"), let bytes = try? Data(contentsOf: root.appendingPathComponent(url.lastPathComponent)) else { task.didFailWithError(HopError.invalid("Unknown asset")); return }
         let mime = url.pathExtension == "js" ? "text/javascript" : url.pathExtension == "css" ? "text/css" : url.pathExtension == "png" ? "image/png" : "text/html"
         task.didReceive(URLResponse(url: url, mimeType: mime, expectedContentLength: bytes.count, textEncodingName: "utf-8")); task.didReceive(bytes); task.didFinish()
     }

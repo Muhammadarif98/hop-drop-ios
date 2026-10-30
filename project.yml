@@ -17,7 +17,7 @@ targets:
     platform: iOS
     sources:
       - Sources/HopApp
-      - path: Resources/hop
+      - path: Resources/Renderer
         type: folder
       - Resources/Assets.xcassets
     dependencies:
