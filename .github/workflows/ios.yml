@@ -1,0 +1,36 @@
+name: Build Hop iOS
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core protocol and path validation tests
+        run: swift test
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Build iPhone Simulator
+        run: xcodebuild -project Hop.xcodeproj -scheme Hop -configuration Debug -sdk iphonesimulator -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build > build-sim.log 2>&1 || { tail -100 build-sim.log; exit 1; }
+      - name: Launch and test real HTTP file receiver
+        run: python3 scripts/simulator_test.py
+      - name: Build unsigned device IPA
+        run: |
+          xcodebuild -project Hop.xcodeproj -scheme Hop -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/device CODE_SIGNING_ALLOWED=NO build > build-device.log 2>&1 || { tail -100 build-device.log; exit 1; }
+          mkdir -p build/export/Payload
+          cp -R build/device/Build/Products/Release-iphoneos/Hop.app build/export/Payload/
+          cd build/export
+          zip -qry Hop-iOS-0.1.0-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Hop-iOS-build
+          path: |
+            build/export/*.ipa
+            build/*.png
+            build/*.json
+            build-*.log

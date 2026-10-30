@@ -1,0 +1,10 @@
+.build/
+build/
+DerivedData/
+*.xcodeproj/
+*.xcarchive/
+*.ipa
+*.mobileprovision
+*.p12
+*.pem
+*.key
