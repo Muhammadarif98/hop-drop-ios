@@ -48,7 +48,12 @@ final class HopViewController: UIViewController, WKScriptMessageHandler, WKNavig
                 do {
                     switch method {
                     case "init": engine.whenReady { self.complete(id, value: engine.state()) }
-                    case "ready": DispatchQueue.main.async { self.pageReady = true }; self.complete(id)
+                    case "ready":
+                        DispatchQueue.main.async { self.pageReady = true }
+                        #if DEBUG
+                        if ProcessInfo.processInfo.environment["HOP_PROTOCOL_TEST"] == "1" { try Data("ready".utf8).write(to: engine.root.appendingPathComponent(".hop-ui-ready")) }
+                        #endif
+                        self.complete(id)
                     case "send": guard args.count == 2, let peer = args[0] as? String, let handles = args[1] as? [String] else { throw HopError.invalid("Bad selection") }; self.complete(id, value: try engine.send(to: peer, handles: handles))
                     case "cancel": if let transfer = args.first as? String { engine.cancel(transfer) }; self.complete(id)
                     case "offer": guard args.count == 3, let transfer = args[0] as? String, let accepted = args[1] as? Bool, let remember = args[2] as? Bool else { throw HopError.invalid("Bad offer") }; engine.decide(transfer, accepted: accepted, remember: remember); self.complete(id)

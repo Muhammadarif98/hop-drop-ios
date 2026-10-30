@@ -53,6 +53,16 @@ final class HopEngine {
         server.ready = { [weak self] port in guard let self else { return }; self.port = port; self.startDiscovery(); self.readyCallbacks.forEach { $0() }; self.readyCallbacks.removeAll()
             #if DEBUG
             if ProcessInfo.processInfo.environment["HOP_PROTOCOL_TEST"] == "1", let data = try? JSONSerialization.data(withJSONObject: self.identity) { try? data.write(to: self.root.appendingPathComponent(".hop-ready.json"), options: .atomic) }
+            if ProcessInfo.processInfo.environment["HOP_PROTOCOL_TEST"] == "1", let number = ProcessInfo.processInfo.environment["HOP_TEST_RECEIVER_PORT"].flatMap(Int.init) {
+                let url = self.root.appendingPathComponent(".hop-send-test.txt")
+                let bytes = Data("Hop iOS outbound test".utf8)
+                do {
+                    try bytes.write(to: url)
+                    try self.learn(["id":"hop-ci-receiver","name":"CI receiver","platform":"win32","port":number],host:"127.0.0.1")
+                    let handle = self.registerSelection([TransferItem(path:"outgoing.txt",size:Int64(bytes.count),directory:false,url:url)])
+                    _ = try self.send(to:"hop-ci-receiver",handles:[handle])
+                } catch { NSLog("CI outbound test failed: %@",error.localizedDescription) }
+            }
             #endif
         }
         try server.start()
