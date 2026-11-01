@@ -1,0 +1,22 @@
+name: Build IPA Check
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: xcodegen generate
+      - name: Build device app
+        run: |
+          xcodebuild -project IPACheck.xcodeproj -scheme IPACheck -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -80 build.log; exit 1; }
+          mkdir -p export/Payload
+          cp -R build/Build/Products/Release-iphoneos/IPACheck.app export/Payload/
+          cd export && zip -qry IPA-Test-1.0.0-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPA-Test
+          path: export/*.ipa
